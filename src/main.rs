@@ -38,12 +38,12 @@ fn process_stdin<F>(translator: F) where F: Fn(&str) -> String {
 
 fn decode_line(line: &str) -> String {
     lazy_static! {
-        static ref PATTERN: Regex = Regex::new(r"8=FIX\d+\.\d+\1.*?10=\d{3}\1").unwrap();
+        static ref PATTERN: Regex = Regex::new(r"8=FIX\.\d+\.\d+\1.*?10=\d{3}\1").unwrap();
     }
 
     if !PATTERN.is_match(line) { return line.to_string(); }
 
-    let mut translation = String::from("((( ");
+    let mut translation = String::new();
 
     {
         for field in line.split("\x01") {
@@ -58,15 +58,12 @@ fn decode_line(line: &str) -> String {
 
             translation.push_str(decoded_tag);
             translation.push('=');
-            translation.push('\'');
             translation.push_str(decoded_value);
-            translation.push('\'');
-            translation.push(' ');
+            translation.push_str(", ");
         }
     }
 
     translation.pop();
-    translation.push_str(" )))");
 
     return translation;
 }
