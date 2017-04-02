@@ -10,13 +10,13 @@ messages into a more readable form.
 Usage
 =====
 
-  > transfix decode </some/file
-  > cat /some/file | transfix decode
+    transfix decode </some/file
+    cat /some/file | transfix decode
 
 About
 =====
 
-Transfix is written and maintained by [Paul Ruane](mailto:Paul Ruane <paul.ruane@oniony.com>).
+Transfix is written and maintained by Paul Ruane (<paul.ruane@oniony.com>).
 
 Transfix is written in Rust: <http://rust-lang.org/>
 
