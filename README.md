@@ -1,8 +1,6 @@
+![TRANSFIX](https://raw.githubusercontent.com/oniony/transfix/master/graphics/transfix.png)
+
 [![Build Status](https://travis-ci.org/oniony/transfix.svg?branch=master)](https://travis-ci.org/oniony/transfix)
-
-- - -
-
-   T R /| N S F | X
 
 Overview
 ========
