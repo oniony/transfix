@@ -12,7 +12,8 @@ Usage
 =====
 
     $ transfix decode </some/file
-    $ cat /some/file | transfix decode | grep
+    OR
+    $ cat /some/file | transfix decode
 
 About
 =====
