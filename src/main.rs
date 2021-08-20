@@ -2,41 +2,59 @@
 extern crate regex;
 
 use std::env;
-use std::error::Error as bob;
 use std::io;
 use std::io::*;
 use std::process;
 
 use regex::Regex;
 
-fn main() {
-    let mut args = env::args();
+const ANSI_RESET: &str = "\x1b[0m";
+const ANSI_YELLOW: &str = "\x1b[33m";
+const ANSI_CYAN: &str = "\x1b[36m";
+const ANSI_BRIGHT_WHITE: &str = "\x1b[97m";
 
-    let action = args.nth(1);
+fn main() {
+    let arguments: Vec<String> = env::args().collect();
+
+    let action = env::args().nth(1);
+
+    let include_ids = arguments.contains(&"--id".to_string());
+    let tag_per_line = arguments.contains(&"--tag-per-line".to_string());
+    let color = arguments.contains(&"--color".to_string());
 
     match action.as_ref().map(String::as_ref) {
-        Some("decode") => process_stdin(decode_line),
+        Some("decode") => process_stdin(include_ids, tag_per_line, color),
         Some(a) => die(&format!("unsupported action '{}'", &a)),
         None => die("no action specified"),
     }
 }
 
-fn process_stdin<F>(translator: F) where F: Fn(&str) -> String {
+fn process_stdin(include_ids: bool, tag_per_line: bool, color: bool) {
     let stdin = io::stdin();
     let in_reader = BufReader::new(stdin);
     let mut stdout = io::stdout();
 
     for line in in_reader.lines() {
         let translation = match line.as_ref().map(String::as_ref) {
-                              Ok(text) => translator(text).to_string(),
-                              Err(error) => error.description().to_string(),
+                              Ok(text) => decode_line(text, include_ids, tag_per_line, color).to_string(),
+                              Err(error) => error.to_string(),
                           };
 
         write!(stdout, "{}\n", translation).unwrap();
     }
 }
 
-fn decode_line(line: &str) -> String {
+fn colorize(text : &str, ansi_color_code: &str, use_color: bool) -> String {
+    let mut result = String::new();
+
+    if use_color { result.push_str(ansi_color_code); }
+    result.push_str(text);
+    if use_color { result.push_str(ANSI_RESET); }
+
+    return result;
+}
+
+fn decode_line(line: &str, include_ids: bool, tag_per_line: bool, color: bool) -> String {
     lazy_static! {
         static ref PATTERN: Regex = Regex::new(r"8=FIX\.\d+\.\d+\1.*?10=\d{3}\1").unwrap();
     }
@@ -45,22 +63,37 @@ fn decode_line(line: &str) -> String {
 
     let mut translation = String::new();
 
-    {
-        for field in line.split("\x01") {
-            let pair: Vec<&str> = field.splitn(2, "=").collect();
-            if pair.len() < 2 { continue; }
+    for field in line.split("\x01") {
+        let pair: Vec<&str> = field.splitn(2, "=").collect();
+        if pair.len() < 2 { continue; }
 
-            let tag = pair[0];
-            let value = pair[1];
+        let tag = pair[0];
+        let value = pair[1];
 
-            let decoded_tag = decode_tag(tag);
-            let decoded_value = decode_value(tag, value);
+        let decoded_tag = decode_tag(tag);
+        let decoded_value = decode_value(tag, value);
 
-            translation.push_str(decoded_tag);
-            translation.push('=');
-            translation.push_str(decoded_value);
-            translation.push_str(", ");
+        if include_ids
+        {
+            translation.push_str(&colorize(tag, ANSI_CYAN, color));
+            translation.push(':');
         }
+
+        translation.push_str(&colorize(decoded_tag, ANSI_BRIGHT_WHITE, color));
+
+        translation.push_str("=");
+
+        if include_ids && value != decoded_value
+        {
+            translation.push_str(&colorize(value, ANSI_YELLOW, color));
+            translation.push(':');
+        }
+
+        translation.push('\'');
+        translation.push_str(decoded_value);
+        translation.push('\'');
+
+        translation.push(if tag_per_line { '\n' } else {' '});
     }
 
     translation.pop();
@@ -1029,8 +1062,79 @@ fn decode_tag(tag: &str) -> &str {
 
 fn decode_value<'a>(tag: &'a str, value: &'a str) -> &'a str {
     match tag {
+        "13" => decode_commtype(value),
+        "18" => decode_execinst(value),
+        "21" => decode_handlinst(value),
+        "22" => decode_idsource(value),
         "35" => decode_msgtype(value),
-        _ => value,
+        "40" => decode_ordtype(value),
+        "47" => decode_rule80a(value),
+        "54" => decode_side(value),
+        "59" => decode_timeinforce(value),
+        "63" => decode_settimnttype(value),
+        "81" => decode_processcode(value),
+        "100" => decode_exdestination(value),
+        _ => value
+    }
+}
+
+fn decode_commtype(value: &str) -> &str {
+    match value {
+        "1" => "per share",
+        "2" => "percentage",
+        "3" => "absolute",
+        _ => value
+    }
+}
+
+fn decode_execinst(value: &str) -> &str {
+    match value {
+        "0" => "Stay on offer side",
+        "1" => "Not held",
+        "2" => "Work",
+        "3" => "Go along",
+        "4" => "Over the day",
+        "5" => "Held",
+        "6" => "Participate don't initiate",
+        "7" => "Strict scale",
+        "8" => "Try to scale",
+        "9" => "Stay on bid side",
+        "A" => "No cross",
+        "B" => "OK to cross",
+        "C" => "Call first",
+        "D" => "Percent of volume",
+        "E" => "Do not increase",
+        "F" => "Do not reduce",
+        "G" => "All or none",
+        "I" => "Institutions only",
+        "L" => "Last peg (last sale)",
+        "M" => "Mid-price peg",
+        "N" => "Non-negotiable",
+        "O" => "Opening peg",
+        "P" => "Market peg",
+        "R" => "Primary peg",
+        "S" => "Suspend",
+        _ => value
+    }
+}
+
+fn decode_handlinst(value: &str) -> &str {
+    match value {
+        "1" => "Automated execution order, private, no Broker intervention",
+        "2" => "Automated execution order, public, Broker intervention OK",
+        "3" => "Manual order, best execution",
+        _ => value
+    }
+}
+
+fn decode_idsource(value: &str) -> &str {
+    match value {
+        "1" => "CUSIP",
+        "2" => "SEDOL",
+        "3" => "QUIK",
+        "4" => "ISIN number",
+        "5" => "RIC code",
+        _ => value
     }
 }
 
@@ -1128,7 +1232,107 @@ fn decode_msgtype(value: &str) -> &str {
         "BF" => "User Response",
         "BG" => "Collateral Inquiry Ack",
         "BH" => "Confirmation Request",
-        _ => value,
+        _ => value
+    }
+}
+
+fn decode_ordtype(value: &str) -> &str {
+    match value {
+        "1" => "Market",
+        "2" => "Limit",
+        "3" => "Stop",
+        "4" => "Stop limit",
+        "5" => "Market on close",
+        "6" => "With or without",
+        "7" => "Limit or better",
+        "8" => "Limit with or without",
+        "9" => "On basis",
+        "A" => "On close",
+        "B" => "Limit on close",
+        "C" => "Forex",
+        "D" => "Previously quoted",
+        "E" => "Previously indicated",
+        "P" => "Pegged",
+        _ => value
+    }
+}
+
+fn decode_rule80a(value: &str) -> &str {
+    match value {
+        "A" => "Agency single order",
+        "C" => "Program order, non-index arb, for member firm/org",
+        "D" => "Program order, index arb, for member firm/org",
+        "I" => "Individual investor, single order",
+        "J" => "Program order, index arb, for individual customer",
+        "K" => "Program order, non-index arb, for individual customer",
+        "M" => "Program order, index arb, for other member",
+        "N" => "Program order, non-index arb, for other member",
+        "U" => "Program order, index arb, for other agency",
+        "Y" => "Program order, non-index arb, for other agency",
+        "W" => "All other orders as agent for other member",
+        _ => value
+    }
+}
+
+fn decode_side(value: &str) -> &str {
+    match value {
+        "1" => "Buy",
+        "2" => "Sell",
+        "3" => "Buy minus",
+        "4" => "Sell plus",
+        "5" => "Sell short",
+        "6" => "Sell short exempt",
+        _ => value
+    }
+}
+
+fn decode_timeinforce(value: &str) -> &str {
+    match value {
+        "0" => "Day",
+        "1" => "Good Till Cancel",
+        "2" => "At the Opening",
+        "3" => "Immediate or Cancel",
+        "4" => "Fill or Kill",
+        "5" => "Good Till Crossing",
+        "6" => "Good Till Date",
+        _ => value
+    }
+}
+
+fn decode_settimnttype(value: &str) -> &str {
+    match value {
+        "0" => "Regular",
+        "1" => "Cash",
+        "2" => "Next Day",
+        "3" => "T+2",
+        "4" => "T+3",
+        "5" => "T+4",
+        "6" => "Future",
+        "7" => "When Issued",
+        "8" => "Sellers Option",
+        "9" => "T+5",
+        _ => value
+    }
+}
+
+fn decode_processcode(value: &str) -> &str {
+    match value {
+        "0" => "regular",
+        "1" => "soft dollar",
+        "2" => "step-in",
+        "3" => "step-out",
+        "4" => "soft-dollar step-in",
+        "5" => "soft-dollar step-out",
+        "6" => "plan sponsor",
+        _ => value
+    }
+}
+
+fn decode_exdestination(value: &str) -> &str {
+    match value {
+        "0" => "none",
+        "4" => "POSIT",
+        _ => value
     }
 }
 
