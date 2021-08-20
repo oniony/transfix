@@ -11,6 +11,7 @@ messages into a more readable form.
 
 * Install Rust from <https://www.rust-lang.org/>
 * Build Transfix
+ 
     $ git clone git@github.com:oniony/transfix.git
     $ cd transfix
     $ cargo build
