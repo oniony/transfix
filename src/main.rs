@@ -9,6 +9,7 @@ use std::process;
 use regex::Regex;
 
 const ANSI_RESET: &'static str = "\x1b[0m";
+const ANSI_RED: &'static str = "\x1b[31m";
 const ANSI_GREEN: &'static str = "\x1b[32m";
 const ANSI_YELLOW: &'static str = "\x1b[33m";
 const ANSI_MAGENTA: &'static str = "\x1b[35m";
@@ -85,7 +86,7 @@ fn decode_line(line: &str, include_ids: bool, tag_per_line: bool, color: bool) -
             translation.push(':');
         }
 
-        translation.push_str(&enquote(&colorize_by_type(decoded_value, color)));
+        translation.push_str(&enquote(&colorize_by_type(value, decoded_value, color)));
 
         translation.push(if tag_per_line { '\n' } else {' '});
     }
@@ -110,17 +111,21 @@ fn colorize(text: &str, ansi_color_code: &str, use_color: bool) -> String {
     return result;
 }
 
-fn colorize_by_type(text: &str, use_color: bool) -> String {
+fn colorize_by_type(value: &str, decoded: &str, use_color: bool) -> String {
     lazy_static! {
         static ref DATETIME_PATTERN: Regex = Regex::new(r"\d{8}-\d{2}:\d{2}:\d{2}(.\d{3})?").unwrap();
     }
 
-    let is_number = text.chars().all(|c| char::is_numeric(c) || c == '.');
-    let is_date = DATETIME_PATTERN.is_match(text);
+    let is_decoded = decoded != value;
+    let is_number = value.chars().all(|c| char::is_numeric(c) || c == '.');
+    let is_date = DATETIME_PATTERN.is_match(value);
 
-    let color_code = if is_number { ANSI_CYAN } else if is_date { ANSI_MAGENTA } else { ANSI_GREEN };
+    let color_code = if is_decoded { ANSI_RED }
+                             else if is_number { ANSI_CYAN }
+                             else if is_date { ANSI_MAGENTA }
+                             else { ANSI_GREEN };
 
-    return colorize(text, color_code, use_color);
+    return colorize(decoded, color_code, use_color);
 }
 
 fn decode_tag(tag: &str) -> &str {
