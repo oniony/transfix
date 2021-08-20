@@ -8,10 +8,12 @@ use std::process;
 
 use regex::Regex;
 
-const ANSI_RESET: &str = "\x1b[0m";
-const ANSI_YELLOW: &str = "\x1b[33m";
-const ANSI_CYAN: &str = "\x1b[36m";
-const ANSI_BRIGHT_WHITE: &str = "\x1b[97m";
+const ANSI_RESET: &'static str = "\x1b[0m";
+const ANSI_GREEN: &'static str = "\x1b[32m";
+const ANSI_YELLOW: &'static str = "\x1b[33m";
+const ANSI_MAGENTA: &'static str = "\x1b[35m";
+const ANSI_CYAN: &'static str = "\x1b[36m";
+const ANSI_BRIGHT_WHITE: &'static str = "\x1b[97m";
 
 fn main() {
     let arguments: Vec<String> = env::args().collect();
@@ -44,14 +46,8 @@ fn process_stdin(include_ids: bool, tag_per_line: bool, color: bool) {
     }
 }
 
-fn colorize(text : &str, ansi_color_code: &str, use_color: bool) -> String {
-    let mut result = String::new();
-
-    if use_color { result.push_str(ansi_color_code); }
-    result.push_str(text);
-    if use_color { result.push_str(ANSI_RESET); }
-
-    return result;
+fn enquote(text: &str) -> String {
+    return if text == "" || text.contains(' ') { format!("'{}'", text) } else { text.to_string() };
 }
 
 fn decode_line(line: &str, include_ids: bool, tag_per_line: bool, color: bool) -> String {
@@ -75,30 +71,56 @@ fn decode_line(line: &str, include_ids: bool, tag_per_line: bool, color: bool) -
 
         if include_ids
         {
-            translation.push_str(&colorize(tag, ANSI_CYAN, color));
+            translation.push_str(&colorize(tag, &ANSI_CYAN, color));
             translation.push(':');
         }
 
-        translation.push_str(&colorize(decoded_tag, ANSI_BRIGHT_WHITE, color));
+        translation.push_str(&colorize(decoded_tag, &ANSI_BRIGHT_WHITE, color));
 
         translation.push_str("=");
 
         if include_ids && value != decoded_value
         {
-            translation.push_str(&colorize(value, ANSI_YELLOW, color));
+            translation.push_str(&colorize(value, &ANSI_YELLOW, color));
             translation.push(':');
         }
 
-        translation.push('\'');
-        translation.push_str(decoded_value);
-        translation.push('\'');
+        translation.push_str(&enquote(&colorize_by_type(decoded_value, color)));
 
         translation.push(if tag_per_line { '\n' } else {' '});
+    }
+
+    if tag_per_line
+    {
+        translation.push_str("-\n");
     }
 
     translation.pop();
 
     return translation;
+}
+
+fn colorize(text: &str, ansi_color_code: &str, use_color: bool) -> String {
+    let mut result = String::new();
+
+    if use_color { result.push_str(ansi_color_code); }
+    result.push_str(text);
+    if use_color { result.push_str(&ANSI_RESET); }
+
+    return result;
+}
+
+fn colorize_by_type(text: &str, use_color: bool) -> String {
+    lazy_static! {
+        static ref DATETIME_PATTERN: Regex = Regex::new(r"\d{8}-\d{2}:\d{2}:\d{2}(.\d{3})?").unwrap();
+    }
+
+    let is_number = text.chars().all(|c| char::is_numeric(c) || c == '.');
+    let is_date = DATETIME_PATTERN.is_match(text);
+
+    let color_code = if is_number { ANSI_CYAN } else if is_date { ANSI_MAGENTA } else { ANSI_GREEN };
+
+    return colorize(text, color_code, use_color);
 }
 
 fn decode_tag(tag: &str) -> &str {
@@ -1067,6 +1089,7 @@ fn decode_value<'a>(tag: &'a str, value: &'a str) -> &'a str {
         "21" => decode_handlinst(value),
         "22" => decode_idsource(value),
         "35" => decode_msgtype(value),
+        "39" => decode_ordstatus(value),
         "40" => decode_ordtype(value),
         "47" => decode_rule80a(value),
         "54" => decode_side(value),
@@ -1232,6 +1255,25 @@ fn decode_msgtype(value: &str) -> &str {
         "BF" => "User Response",
         "BG" => "Collateral Inquiry Ack",
         "BH" => "Confirmation Request",
+        _ => value
+    }
+}
+
+fn decode_ordstatus(value: &str) -> &str {
+    match value {
+        "0" => "New",
+        "1" => "Partially filled",
+        "2" => "Filled",
+        "3" => "Done for day",
+        "4" => "Canceled",
+        "5" => "Replaced",
+        "6" => "Pending Cancel/Replace",
+        "7" => "Stopped",
+        "8" => "Rejected",
+        "9" => "Suspended",
+        "A" => "Pending New",
+        "B" => "Calculated",
+        "C" => "Expired",
         _ => value
     }
 }
