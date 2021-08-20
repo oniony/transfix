@@ -10,11 +10,11 @@ messages into a more readable form.
 # Compilation
 
 * Install Rust from <https://www.rust-lang.org/>
-* Build Transfix
- 
-    $ git clone git@github.com:oniony/transfix.git
-    $ cd transfix
-    $ cargo build
+* Build Transfix:
+
+      $ git clone git@github.com:oniony/transfix.git
+      $ cd transfix
+      $ cargo build
     
 # Usage
 
