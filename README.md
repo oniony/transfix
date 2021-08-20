@@ -7,6 +7,14 @@
 Transfix is a command-line utility to translate FIX protocol
 messages into a more readable form.
 
+# Compilation
+
+* Install Rust from <https://www.rust-lang.org/>
+* Build Transfix
+    $ git clone git@github.com:oniony/transfix.git
+    $ cd transfix
+    $ cargo build
+    
 # Usage
 
     $ transfix decode </some/file
