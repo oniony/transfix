@@ -12,9 +12,7 @@ mod ansi;
 
 fn main() {
     let arguments: Vec<String> = env::args().collect();
-
     let action = env::args().nth(1);
-
     let include_ids = arguments.contains(&"--id".to_string());
     let tag_per_line = arguments.contains(&"--tag-per-line".to_string());
     let color = arguments.contains(&"--color".to_string());
@@ -22,7 +20,7 @@ fn main() {
     match action.as_ref().map(String::as_ref) {
         Some("decode") => process_stdin(include_ids, tag_per_line, color),
         Some(a) => die(&format!("unsupported action '{}'", &a)),
-        None => die("no action specified"),
+        None => die("Usage: transfix decode"),
     }
 }
 
