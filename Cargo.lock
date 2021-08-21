@@ -12,6 +12,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "json"
+version = "0.11.15"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "92c245af8786f6ac35f95ca14feca9119e71339aaab41e878e7cdd655c97e9e5"
+
+[[package]]
 name = "kernel32-sys"
 version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -85,6 +91,7 @@ dependencies = [
 name = "transfix"
 version = "0.1.0"
 dependencies = [
+ "json",
  "lazy_static",
  "regex",
 ]
