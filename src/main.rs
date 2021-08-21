@@ -7,18 +7,8 @@ use std::io;
 use std::io::*;
 use std::process;
 
-const ANSI_RESET: &'static str = "\x1b[0m";
-const ANSI_RED: &'static str = "\x1b[31m";
-const ANSI_GREEN: &'static str = "\x1b[32m";
-const ANSI_YELLOW: &'static str = "\x1b[33m";
-const ANSI_BLUE: &'static str = "\x1b[34m";
-const ANSI_MAGENTA: &'static str = "\x1b[35m";
-const ANSI_WHITE: &'static str = "\x1b[37m";
-const ANSI_GREY: &'static str = "\x1b[90m";
-const ANSI_CYAN: &'static str = "\x1b[36m";
-const ANSI_BRIGHT_WHITE: &'static str = "\x1b[97m";
-
 mod dictionary;
+mod ansi;
 
 fn main() {
     let arguments: Vec<String> = env::args().collect();
@@ -76,17 +66,17 @@ fn decode_line(line: &str, include_ids: bool, tag_per_line: bool, color: bool) -
 
         if include_ids
         {
-            translation.push_str(&colorize(tag, &ANSI_RED, color));
+            translation.push_str(&colorize(tag, &ansi::ANSI_RED, color));
             translation.push(':');
         }
 
-        translation.push_str(&colorize(&decoded_tag, &ANSI_BRIGHT_WHITE, color));
+        translation.push_str(&colorize(&decoded_tag, &ansi::ANSI_BRIGHT_WHITE, color));
 
         translation.push_str("=");
 
         if include_ids && value != decoded_value
         {
-            translation.push_str(&colorize(value, &ANSI_YELLOW, color));
+            translation.push_str(&colorize(value, &ansi::ANSI_YELLOW, color));
             translation.push(':');
         }
 
@@ -110,7 +100,7 @@ fn colorize(text: &str, ansi_color_code: &str, use_color: bool) -> String {
 
     if use_color { result.push_str(ansi_color_code); }
     result.push_str(text);
-    if use_color { result.push_str(&ANSI_RESET); }
+    if use_color { result.push_str(&ansi::ANSI_RESET); }
 
     return result;
 }
@@ -124,10 +114,10 @@ fn colorize_by_type(value: &str, decoded: &str, use_color: bool) -> String {
     let is_number = value.chars().all(|c| char::is_numeric(c) || c == '.');
     let is_date = DATETIME_PATTERN.is_match(value);
 
-    let color_code = if is_decoded { ANSI_YELLOW }
-                             else if is_number { ANSI_CYAN }
-                             else if is_date { ANSI_MAGENTA }
-                             else { ANSI_GREEN };
+    let color_code = if is_decoded { ansi::ANSI_YELLOW }
+                             else if is_number { ansi::ANSI_CYAN }
+                             else if is_date { ansi::ANSI_MAGENTA }
+                             else { ansi::ANSI_GREEN };
 
     return colorize(decoded, color_code, use_color);
 }
