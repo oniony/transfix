@@ -2,7 +2,11 @@ name: Build
 
 on:
   push:
-    branches: [ "main" ]
+    branches: 
+      - main
+    paths:
+      - Cargo.toml
+      - src
 
 env:
   CARGO_TERM_COLOR: always
