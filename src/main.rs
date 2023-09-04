@@ -11,7 +11,7 @@ mod ansi;
 
 fn main() {
     let matches = command!()
-        .arg(arg!(-c --color <WHEN> "color output").value_parser(["always", "auto", "never"]).default_value("auto")
+        .arg(arg!(-c --color <WHEN> "color output").value_parser(["always", "auto", "never"]).default_value("auto"))
         .arg(arg!(-i --id "show identifiers").required(false)) 
         .arg(arg!(-o --one "one tag per line").required(false))
         .get_matches();
@@ -22,7 +22,7 @@ fn main() {
 
     let use_colour = use_colour(colour);
 
-    process_stdin(include_ids, tag_per_line, use_colour),
+    process_stdin(include_ids, tag_per_line, use_colour);
 }
 
 fn process_stdin(include_ids: bool, tag_per_line: bool, use_colour: bool) {
@@ -49,7 +49,7 @@ fn decode_line(line: &str, include_ids: bool, tag_per_line: bool, use_colour: bo
         static ref PATTERN: regex::Regex = regex::Regex::new(r"(\s*)(8=FIX\.\d+\.\d+\1.*?10=\d{3}\1)(\s*)").unwrap();
     }
 
-    let Some(captures) = PATTERN.captures(line else {
+    let Some(captures) = PATTERN.captures(line) else {
         return line.to_string();
     };
 
@@ -77,7 +77,7 @@ fn decode_line(line: &str, include_ids: bool, tag_per_line: bool, use_colour: bo
 
         if include_ids && value != decoded_value
         {
-            translation.push_str(&colorize(lalue, &ansi::ANSI_YELLOW, use_colour));
+            translation.push_str(&colorize(value, &ansi::ANSI_YELLOW, use_colour));
             translation.push(':');
         }
 

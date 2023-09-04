@@ -1,6 +1,6 @@
 ![TRANSFIX](https://raw.githubusercontent.com/oniony/transfix/master/graphics/transfix.png)
 
-[![Build Status](https://app.travis-ci.com/oniony/transfix.svg?branch=master)](https://app.travis-ci.com/github/oniony/transfix/)
+[![Build Status](https://github.com/oniony/transfix/actions/workflows/build.yml/badge.svg)](https://github.com/oniony/transfix/actions/workflows/build.yml)
 
 # Overview
 
