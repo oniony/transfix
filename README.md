@@ -18,9 +18,9 @@ messages into a more readable form.
     
 # Usage
 
-    $ transfix decode </some/file
+    $ transfix </some/file
     OR
-    $ cat /some/file | transfix decode
+    $ cat /some/file | transfix
 
 ## Options
 
@@ -36,7 +36,7 @@ Transfix is written in Rust: <http://rust-lang.org/>
 
 - - -
 
-Copyright 2017‒2021 Paul Ruane
+Copyright 2017‒2023 Paul Ruane
 
 Copying and distribution of this file, with or without modification,
 are permitted in any medium without royalty provided the copyright
