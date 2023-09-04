@@ -1,4 +1,4 @@
-![TRANSFIX](https://raw.githubusercontent.com/oniony/transfix/master/graphics/transfix.png)
+![TRANSFIX](https://raw.githubusercontent.com/oniony/transfix/main/graphics/transfix.png)
 
 [![Build Status](https://github.com/oniony/transfix/actions/workflows/build.yml/badge.svg)](https://github.com/oniony/transfix/actions/workflows/build.yml)
 
