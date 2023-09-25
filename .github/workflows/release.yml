@@ -28,7 +28,10 @@ jobs:
       run: echo ${{ github.sha }} > VERSION
 
     - name: Archive
-      run: tar -czf transfix-${{ github.ref_name }}.tgz LICENSE README.md VERSION target/release/transfix
+      run: |
+        mkdir transfix-${{ github.ref_name}}
+        mv LICENSE README.md VERSION target/release/transfix transfix-${{ github.ref_name }}
+        tar -czf transfix-${{ github.ref_name }}.tgz transfix-${{ github.ref_name }}
 
     - name: Release CLI
       uses: softprops/action-gh-release@v1
