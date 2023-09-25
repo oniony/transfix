@@ -28,6 +28,12 @@ messages into a more readable form.
 * `--color` ― color the tags and values
 * `--tag-per-line` ― show each tag on a new line
 
+# Versions
+
+## v1.0.0
+
+* First published release
+
 # About
 
 Transfix is written and maintained by Paul Ruane (<paul.ruane@oniony.com>) and is available at <http://github.com/oniony/transfix/>.
