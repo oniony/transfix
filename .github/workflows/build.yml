@@ -23,16 +23,3 @@ jobs:
 
     - name: Build CLI
       run: cargo build --verbose
-
-    - name: Versioning
-      run: echo ${{ github.sha }} > VERSION
-
-    - name: Release CLI
-      uses: softprops/action-gh-release@v1
-      if: startsWith(github.ref, 'refs/tags')
-      with: 
-      files: |
-        LICENSE
-        README.md
-        VERSION
-        target/release/transfix
