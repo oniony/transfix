@@ -22,17 +22,17 @@ jobs:
       uses: actions/checkout@v3
 
     - name: Build CLI
-      run: cargo build --verbose
+      run: cargo build --release --verbose
 
     - name: Version
       run: echo ${{ github.sha }} > VERSION
+
+    - name: Archive
+      run: tar -czf transfix-${{ github.ref_name }}.tgz LICENSE README.md VERSION target/release/transfix
 
     - name: Release CLI
       uses: softprops/action-gh-release@v1
       if: startsWith(github.ref, 'refs/tags')
       with: 
         files: |
-          LICENSE
-          README.md
-          VERSION
-          target/release/transfix
+          transfix-${{ github.ref_name }}.tgz
